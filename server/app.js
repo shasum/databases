@@ -85,12 +85,46 @@ app.get('/classes/messages', function(req, res){
   var queryString = "SELECT messages.id as objectId, messages.text, rooms.name as roomname, users.name as username from messages " +
                     "inner join rooms on rooms.id = messages.roomId " +
                     "inner join users on users.id = messages.userId";
-  var queryArgs = [];
-  dbConnection.query(queryString, queryArgs, function(err, results) {
-    err ? console.log(err) : console.log(results);
+  dbConnection.query(queryString, function(err, results) {
+    if (err) {
+      throw err;
+    }
     msgBody.results = results;
     res.status(200).send(JSON.stringify(msgBody));
     dbConnection.end();
+  });
+});
+
+
+app.post('/classes/users', function(req, res){
+  res.set(headers);
+  var username = req.body.username;
+
+  var dbConnection = mysql.createConnection({
+    user: "root",
+    password: "",
+    database: "chat"
+  });
+  dbConnection.connect();
+
+  var queryString = "SELECT id FROM users WHERE name = " + "'" + username + "'";
+  dbConnection.query(queryString, function(err, results) {
+    if (err) {
+      throw err;
+    }
+    if (results.length > 0) {
+      res.status(201).send();
+      dbConnection.end();
+    } else {
+      var queryString = "INSERT into users (name) values (" + "'" + username + "'" + ")";
+      dbConnection.query(queryString, function(err, results) {
+        if (err) {
+          throw err;
+        }
+        res.status(201).send();
+        dbConnection.end();
+      });
+    }
   });
 });
 
@@ -111,8 +145,7 @@ app.post('/classes/messages', function(req, res){
 
   // if user exists
   var queryString = "SELECT id FROM users WHERE name = " + "'" +username + "'";
-  var queryArgs = [];
-  dbConnection.query(queryString, queryArgs, function(err, results) {
+  dbConnection.query(queryString, function(err, results) {
     if (err) {
       throw err;
     }
@@ -121,8 +154,7 @@ app.post('/classes/messages', function(req, res){
       var userId = results[0].id;
       // look for room ID
       var queryString = "SELECT id FROM rooms WHERE name = " + "'" + roomname + "'";
-      var queryArgs = [];
-      dbConnection.query(queryString, queryArgs, function(err, results) {
+      dbConnection.query(queryString, function(err, results) {
         if (err) {
           throw err;
         }
@@ -132,8 +164,7 @@ app.post('/classes/messages', function(req, res){
           // save message to database
           var queryString = "INSERT into messages (text, roomId, userId) " +
                             "values (" + "'" + text + "'" + "," + roomId + "," + userId + ")";
-          var queryArgs = [];
-          dbConnection.query(queryString, queryArgs, function(err, results) {
+          dbConnection.query(queryString, function(err, results) {
             if (err) {
               throw err;
             }
@@ -143,15 +174,13 @@ app.post('/classes/messages', function(req, res){
         }
         else { // if room doesn't exist, create it
           var queryString = "INSERT into rooms (name) values (" + "'" + roomname + "'" + ")";
-          var queryArgs = [];
-          dbConnection.query(queryString, queryArgs, function(err, results) {
+          dbConnection.query(queryString, function(err, results) {
             if (err) {
               throw err;
             }
             // look for room ID
             var queryString = "SELECT id FROM rooms WHERE name = " + "'" + roomname + "'";
-            var queryArgs = [];
-            dbConnection.query(queryString, queryArgs, function(err, results) {
+            dbConnection.query(queryString, function(err, results) {
               if (err) {
                 throw err;
               }
@@ -161,8 +190,7 @@ app.post('/classes/messages', function(req, res){
                 // save message to database
                 var queryString = "INSERT into messages (text, roomId, userId) " +
                                   "values (" + "'" + text + "'" + "," + roomId + "," + userId + ")";
-                var queryArgs = [];
-                dbConnection.query(queryString, queryArgs, function(err, results) {
+                dbConnection.query(queryString, function(err, results) {
                   if (err) {
                     throw err;
                   }
@@ -178,15 +206,13 @@ app.post('/classes/messages', function(req, res){
     else {
       // user doesn't exist, create user
       var queryString = "INSERT into users (name) values (" + "'" + username + "'" + ")";
-      var queryArgs = [];
-      dbConnection.query(queryString, queryArgs, function(err, results) {
+      dbConnection.query(queryString, function(err, results) {
         if (err) {
           throw err;
         }
         // get userId
         var queryString = "SELECT id FROM users WHERE name = " + "'" + username + "'";
-        var queryArgs = [];
-        dbConnection.query(queryString, queryArgs, function(err, results) {
+        dbConnection.query(queryString, function(err, results) {
           if (err) {
             throw err;
           }
@@ -196,8 +222,7 @@ app.post('/classes/messages', function(req, res){
           }
           // look for room ID
           var queryString = "SELECT id FROM rooms WHERE name = " + "'" + roomname + "'";
-          var queryArgs = [];
-          dbConnection.query(queryString, queryArgs, function(err, results) {
+          dbConnection.query(queryString, function(err, results) {
             if (err) {
               throw err;
             }
@@ -207,8 +232,7 @@ app.post('/classes/messages', function(req, res){
               // save message to database
               var queryString = "INSERT into messages (text, roomId, userId) " +
                                 "values (" + "'" + text + "'" + "," + roomId + "," + userId + ")";
-              var queryArgs = [];
-              dbConnection.query(queryString, queryArgs, function(err, results) {
+              dbConnection.query(queryString, function(err, results) {
                 if (err) {
                   throw err;
                 }
@@ -218,15 +242,13 @@ app.post('/classes/messages', function(req, res){
             }
             else { // if room doesn't exist, create it
               var queryString = "INSERT into rooms (name) values (" + "'" + roomname + "'" + ")";
-              var queryArgs = [];
-              dbConnection.query(queryString, queryArgs, function(err, results) {
+              dbConnection.query(queryString, function(err, results) {
                 if (err) {
                   throw err;
                 }
                 // look for room ID
                 var queryString = "SELECT id FROM rooms WHERE name = " + "'" + roomname + "'";
-                var queryArgs = [];
-                dbConnection.query(queryString, queryArgs, function(err, results) {
+                dbConnection.query(queryString, function(err, results) {
                   if (err) {
                     throw err;
                   }
@@ -236,8 +258,7 @@ app.post('/classes/messages', function(req, res){
                     // save message to database
                     var queryString = "INSERT into messages (text, roomId, userId) " +
                                       "values (" + "'" + text + "'" + "," + roomId + "," + userId + ")";
-                    var queryArgs = [];
-                    dbConnection.query(queryString, queryArgs, function(err, results) {
+                    dbConnection.query(queryString, function(err, results) {
                       if (err) {
                         throw err;
                       }
